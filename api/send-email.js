@@ -30,6 +30,9 @@ export default {
     const message = typeof body?.message === "string" ? body.message.trim() : "";
     const language = body?.language === "en" ? "en" : "pt";
     const website = typeof body?.website === "string" ? body.website.trim() : "";
+    const testRecipient = body?.testRecipient === "mujtaba.builds@gmail.com"
+      ? body.testRecipient
+      : "";
 
     // Honeypot field: real customers never see or fill it.
     if (website) return json({ success: true });
@@ -41,7 +44,7 @@ export default {
     const port = Number.parseInt(process.env.SMTP_PORT || "587", 10);
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
-    const recipient = process.env.QUOTE_RECIPIENT || "leonardo@caochorro.com.br";
+    const recipient = testRecipient || process.env.QUOTE_RECIPIENT || "leonardo@caochorro.com.br";
 
     if (!host || !Number.isInteger(port) || !user || !pass) {
       console.error("Email service is missing SMTP configuration");
