@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 const json = (data, status = 200) =>
   Response.json(data, {
     status,
@@ -36,41 +34,45 @@ export default {
       return json({ success: false, error: "Invalid message" }, 400);
     }
 
-    const host = process.env.SMTP_HOST;
-    const port = Number.parseInt(process.env.SMTP_PORT || "587", 10);
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
     const recipient = process.env.QUOTE_RECIPIENT || "leonardo@caochorro.com.br";
-
-    if (!host || !Number.isInteger(port) || !user || !pass) {
-      console.error("Email service is missing SMTP configuration");
-      return json({ success: false, error: "Email service is not configured" }, 503);
-    }
-
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 10000,
-    });
+    const subject =
+      language === "en"
+        ? "Website message — Cão Chorro Pet Shop"
+        : "Mensagem do site — Cão Chorro Pet Shop";
 
     try {
-      const info = await transporter.sendMail({
-        from: `"Cão Chorro Pet Shop" <${user}>`,
-        to: recipient,
-        subject:
-          language === "en"
-            ? "Quote request — Cão Chorro Pet Shop"
-            : "Solicitação de orçamento — Cão Chorro Pet Shop",
-        text: message,
-      });
+      const response = await fetch(
+        `https://formsubmit.co/ajax/${encodeURIComponent(recipient)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name: "Cão Chorro Pet Shop — site",
+            message,
+            _subject: subject,
+            _template: "table",
+            _captcha: "false",
+            _url: "https://cou-chorro.vercel.app/",
+          }),
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+      const result = await response.json().catch(() => ({}));
 
-      return json({ success: true, messageId: info.messageId });
+      if (!response.ok || result.success === false) {
+        throw new Error(result.message || `FormSubmit returned ${response.status}`);
+      }
+
+      return json({
+        success: true,
+        provider: "formsubmit",
+        message: result.message || "Submission accepted",
+      });
     } catch (error) {
-      console.error("SMTP delivery failed", error);
+      console.error("FormSubmit delivery failed", error);
       return json({ success: false, error: "Email could not be sent" }, 502);
     }
   },

@@ -8,8 +8,5 @@
   },
   "scripts": {
     "check": "node --check api/send-email.js && node work/validate-site.mjs"
-  },
-  "dependencies": {
-    "nodemailer": "^10.0.10"
   }
 }
