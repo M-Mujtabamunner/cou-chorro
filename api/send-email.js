@@ -48,6 +48,8 @@ export default {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            Origin: "https://cou-chorro.vercel.app",
+            Referer: "https://cou-chorro.vercel.app/",
           },
           body: JSON.stringify({
             name: "Cão Chorro Pet Shop — site",
@@ -57,12 +59,16 @@ export default {
             _captcha: "false",
             _url: "https://cou-chorro.vercel.app/",
           }),
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(25000),
         },
       );
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok || result.success === false) {
+      if (
+        !response.ok ||
+        result.success === false ||
+        String(result.success).toLowerCase() === "false"
+      ) {
         throw new Error(result.message || `FormSubmit returned ${response.status}`);
       }
 
